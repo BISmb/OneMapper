@@ -6,4 +6,24 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <Title>OneMapper</Title>
+    <Description>Simple static mapper to declare mapping between two types</Description>
+    <Authors>Marty Barrett</Authors>
+    <Copyright>Copyright (c) 2022 Marty Barrett</Copyright>
+    <TargetFrameworks>net6.0</TargetFrameworks>
+    <RootNamespace>OneMapper</RootNamespace>
+    <AssemblyName>OneMapper</AssemblyName>
+
+    <!-- NuGet settings -->
+    <PackageId>OneMapper</PackageId>
+    <PackageTags>mapper</PackageTags>
+    <PackageReleaseNotes>https://github.com/BISMB/OneMapper</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/BISMB/OneMapper</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/BISMB/OneMapper</RepositoryUrl>
+
+  </PropertyGroup>
+
 </Project>

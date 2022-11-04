@@ -5,7 +5,7 @@ This library is for developers who just need a barebones mapping solution. Very 
 
 ## Install Nuget
 
-Package: 
+Package: Install-Package OneMapper -Version 1.0.0
 
 ### 1. Create map function
 
