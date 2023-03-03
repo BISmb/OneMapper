@@ -1,18 +1,48 @@
-﻿namespace OneMapper;
+﻿using Microsoft.Extensions.Logging;
+
+namespace OneMapper;
+
+public class FoundMultipleMappingException : Exception
+{
+    public FoundMultipleMappingException(Type typeFrom, Type typeTo)
+        : base($"Multiple mapping delegates found for {typeFrom.Name} to {typeTo.Name}")
+    { }
+}
+
+public class CannotAddMultipleMappingException : Exception
+{
+    public CannotAddMultipleMappingException(Type typeFrom, Type typeTo)
+        : base($"A mapper already exists between the types: {typeFrom.Name} and {typeTo.Name}")
+    { }
+}
+
+public class ConvertedObjectNotExpectedTypeException : Exception
+{
+    public ConvertedObjectNotExpectedTypeException(Type typeTo)
+        : base($"Converted object is not of expected type: {typeTo.Name}")
+    { }
+}
 
 public static class Mapper
 {
-    public static bool ThrowExceptionOnDuplicateMapping;
+    private static ILogger? _logger;
+    private static bool _ThrowExceptionOnDuplicateMapping;
 
     private readonly static Dictionary<(Type, Type), Delegate> _mappersDelegate;
-    private readonly static Dictionary<(Type, Type), Func<object, object[], object>> _mappers;
 
     static Mapper()
     {
         _mappersDelegate = new Dictionary<(Type, Type), Delegate>();
-        _mappers = new Dictionary<(Type, Type), Func<object, object[], object>>();
+    }
 
-        ThrowExceptionOnDuplicateMapping = false;
+    public static void AddLogger(ILogger logger)
+    {
+        _logger = logger;
+    }
+
+    public static void ThrowExceptionOnDeplicateMapping()
+    {
+        _ThrowExceptionOnDuplicateMapping = true;
     }
 
     public static void RemoveMapper((Type, Type) key)
@@ -26,9 +56,9 @@ public static class Mapper
     {
         if (_mappersDelegate.ContainsKey((typeof(T), typeof(F))))
         {
-            if (ThrowExceptionOnDuplicateMapping)
+            if (_ThrowExceptionOnDuplicateMapping)
             {
-                throw new ArgumentException($"A mapper already exists between the types: {typeof(F).Name} and {typeof(T).Name}");
+                throw new CannotAddMultipleMappingException(typeof(F), typeof(T));
             }
             else
             {
@@ -48,24 +78,20 @@ public static class Mapper
             return mappingFunc(obj);
         });
 
-        AddMapperDelegate<T, F>(inputMapFunc);
+        AddMapperDelegate(inputMapFunc);
     }
 
     public static T To<T, F>(F fromObject, params object[] additionalItems)
         where T : class
         where F : class
     {
-        // use object type mappers
-        //var foundMapper = _mappers[(typeof(T), typeof(F))];
-        //var convertedObject = foundMapper(fromObject, additionalItems);
-
         // use strongly typed mappers (delegates)
         var foundMapper = _mappersDelegate[(typeof(T), typeof(F))];
         var convertedObject = foundMapper.DynamicInvoke(fromObject, additionalItems);
 
         if (convertedObject is not T expectedObjectType)
         {
-            throw new Exception($"Converted object is not of expected type: {typeof(T).Name}");
+            throw new ConvertedObjectNotExpectedTypeException(typeof(T));
         }
 
         return expectedObjectType;
@@ -80,26 +106,4 @@ public static class Mapper
             yield return To<T, F>(fromObject, new object[0]);
         }
     }
-
-    //public static void AddMapper((Type, Type) key, Func<object, object[], object> mappingFunc)
-    //{
-    //    _mappers.Add(key, mappingFunc);
-    //}
-
-    //public static void AddMapper<T, F>(Func<object, object[], object> mappingFunc)
-    //{
-    //    _mappers.Add((typeof(T), typeof(F)), mappingFunc);
-    //}
-
-    //public static void AddMapper<T, F>(Func<object, object> mappingFunc)
-    //    where T: class
-    //    where F: class
-    //{
-    //    Func<object, object[], object> inputMapFunc = new Func<object, object[], object>((obj, additionalArgs) =>
-    //    {
-    //        return mappingFunc(obj);
-    //    });
-
-    //    _mappers.Add((typeof(T), typeof(F)), inputMapFunc);
-    //}
 }
